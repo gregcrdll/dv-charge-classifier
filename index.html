@@ -1,13 +1,158 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SC DV Classifier</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SC DV Charge Classifier</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f3f4f6;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 600px;
+    }
+    h1 {
+      text-align: center;
+      color: #1e40af;
+    }
+    .input-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      padding: 10px 15px;
+      background-color: #1e40af;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .output {
+      margin-top: 20px;
+      padding-top: 10px;
+      border-top: 1px solid #ddd;
+      text-align: center;
+    }
+    select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 20px;
+      font-size: 16px;
+    }
+    .explanation {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #555;
+    }
+  </style>
 </head>
 <body>
-  <div id="root"></div>
-  <script type="module" src="index.js"></script>
+  <div class="container">
+    <h1>SC DV Charge Classifier</h1>
+    <p>Enter a description of the incident. This tool uses SC law to determine the appropriate Domestic Violence charge.</p>
+    <div class="input-group">
+      <input type="text" id="incident" placeholder="e.g., Threatened to shoot and blocked 911 call">
+      <button onclick="classifyDV()">Classify</button>
+    </div>
+    <div class="output" id="resultBox" style="display:none;">
+      <h3 id="result"></h3>
+      <p id="explanation" class="explanation"></p>
+    </div>
+    <select id="referenceType" onchange="updateReference()">
+      <option value="">Select Reference Type</option>
+      <option value="moderate">Moderate Injury Examples</option>
+      <option value="great">Great Bodily Injury Examples</option>
+      <option value="indifference">Extreme Indifference Examples</option>
+    </select>
+    <p class="explanation" id="referenceText"></p>
+  </div>
+  <script>
+    function classifyDV() {
+      const text = document.getElementById("incident").value.toLowerCase();
+
+      const physicalMinor = /(slap|push|grab|shove|poke|smack|flick|tap|pinch)/.test(text);
+      const physicalMajor = /(punch|kick|choked|struck|headbutt|body slam|tackle|elbowed|kneed|bit|burned|cut|hit with object|threw down stairs)/.test(text);
+
+      const threatLow = /(threaten(ed)? to slap|hit)/.test(text);
+      const threatModerate = /(threaten(ed)? to harm|hurt|beat|break something)/.test(text);
+      const threatHigh = /(threaten(ed)? to kill|shoot|stab|burn|strangle|blow up|murder)/.test(text);
+
+      const weapon = /(gun|knife|bat|weapon|firearm|sword|crowbar|machete)/.test(text);
+      const priorDV = /(prior dv|previous conviction|history of dv)/.test(text);
+      const minor = /(child|minor)/.test(text);
+      const pregnant = /(pregnant)/.test(text);
+      const protection = /(protection order|restraining order)/.test(text);
+      const blocked = /(blocked|took phone|911|prevented call)/.test(text);
+
+      const greatInjury = /(broke (arm|leg|rib|nose|jaw)|fractured|great injury|serious injury|hospitalized|lost tooth|disfigured|loss of function|internal bleeding|brain injury|stab wound|gunshot|coma)/.test(text);
+      const moderateInjury = /(concussion|swollen eye|deep bruises|black eye|sprain|minor fracture|stitches|mild bleeding)/.test(text);
+      const extremeIndifference = /(ran over|threw off|pushed into traffic|set on fire|smashed head|beat unconscious)/.test(text);
+
+      const aggravators = [weapon, priorDV, minor, pregnant, protection, blocked].filter(Boolean).length;
+
+      let charge = "";
+      let reason = "";
+
+      if (greatInjury && (protection || weapon || extremeIndifference)) {
+        charge = "DVHAN";
+        reason = "Great bodily injury occurred with extreme indifference, weapon use, or violation of a protection order.";
+      } else if (greatInjury || (extremeIndifference && aggravators >= 1)) {
+        charge = "DV 1st Degree";
+        reason = "Great bodily injury or extreme indifference with aggravators (e.g., weapon or prior DV).";
+      } else if (physicalMajor && (weapon || protection || priorDV || moderateInjury)) {
+        charge = "DV 1st Degree";
+        reason = "Major force used with moderate injury or aggravators like a weapon, prior DV, or protection order.";
+      } else if ((threatHigh && aggravators >= 1) || (physicalMinor && aggravators >= 2)) {
+        charge = "DV 1st Degree";
+        reason = "High-level threat or minor contact with multiple aggravating factors.";
+      } else if (moderateInjury || physicalMajor || threatModerate || blocked || aggravators >= 1) {
+        charge = "DV 2nd Degree";
+        reason = "Moderate injury, moderate-level threat or force, or one major aggravator like blocking 911 or prior DV.";
+      } else if (physicalMinor || threatLow) {
+        charge = "DV 3rd Degree";
+        reason = "Minor contact or low-level verbal threat with no aggravating conditions.";
+      } else {
+        charge = "Does not meet DV criteria";
+        reason = "No qualifying act, injury, or threat detected under SC DV law.";
+      }
+
+      document.getElementById("result").textContent = `Recommended Charge: ${charge}`;
+      document.getElementById("explanation").textContent = reason;
+      document.getElementById("resultBox").style.display = "block";
+    }
+
+    function updateReference() {
+      const type = document.getElementById("referenceType").value;
+      const referenceText = document.getElementById("referenceText");
+      if (type === "moderate") {
+        referenceText.textContent = "Examples: Concussion, swollen eye, black eye, deep bruises, minor fracture, stitches, sprain";
+      } else if (type === "great") {
+        referenceText.textContent = "Examples: Broken bones, lost tooth, internal bleeding, coma, disfigurement, gunshot, stab wound, brain injury";
+      } else if (type === "indifference") {
+        referenceText.textContent = "Examples: Threw into traffic, ran over, set on fire, smashed head, beat unconscious";
+      } else {
+        referenceText.textContent = "";
+      }
+    }
+  </script>
 </body>
 </html>
