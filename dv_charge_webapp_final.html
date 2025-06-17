@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Domestic Violence Charge Evaluator</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gradient-to-b from-gray-900 to-gray-800 text-white min-h-screen p-6">
+  <div class="max-w-6xl mx-auto px-6 sm:px-8 md:px-12 lg:px-16 xl:px-24">
+    <h1 class="text-4xl font-extrabold mb-8 text-center text-blue-400 tracking-tight">Domestic Violence Charge Evaluator</h1>
+
+    <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl space-y-8 border border-blue-700">
+      <label for="household" class="block text-lg font-semibold">Victim's Relationship (Household Member Type):</label>
+      <select id="household" class="w-full p-3 border rounded shadow bg-gray-900 text-white">
+        <option value="none">-- Select --</option>
+        <option value="spouse">Spouse or Former Spouse</option>
+        <option value="cohabitant">Persons Who Are Cohabiting or Formerly Cohabited</option>
+        <option value="childInCommon">Persons Who Have a Child in Common</option>
+      </select>
+
+      <label for="incidentInput" class="block text-lg font-semibold">Describe the Incident:</label>
+      <textarea id="incidentInput" rows="4" class="w-full p-3 border rounded shadow bg-gray-900 text-white" placeholder="E.g., The husband pushed his pregnant wife and threatened her with a knife in front of their child..."></textarea>
+
+      <div class="flex items-center space-x-4">
+        <button id="voiceBtn" class="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700">🎤 Speak Now</button>
+        <p id="voiceOutput" class="text-sm text-gray-300"></p>
+      </div>
+
+      <label for="aggravators" class="block text-lg font-semibold">Aggravating Factors (select all that apply):</label>
+      <select id="aggravators" multiple class="w-full p-3 border rounded shadow bg-gray-900 text-white">
+        <option value="weapon">Deadly Weapon Used</option>
+        <option value="minor">Minor Present or Witness</option>
+        <option value="protection">Protection Order in Place</option>
+        <option value="pregnant">Victim Pregnant</option>
+        <option value="priorDV1">1 Prior DV Conviction</option>
+        <option value="priorDV2">2 or More Prior DV Convictions</option>
+        <option value="priorDVHAN">Prior DVHAN Conviction</option>
+        <option value="indifference">Extreme Indifference to Human Life</option>
+        <option value="strangulation">Attempted Strangulation or Obstructed Breathing</option>
+        <option value="seriousInjury">Serious Bodily Injury</option>
+        <option value="protractedLoss">Protracted Loss or Impairment of Body Part</option>
+        <option value="kidnapping">Kidnapping/Unlawful Restraint</option>
+        <option value="interference911">Interfered with 911/Reporting</option>
+        <option value="firearmPresent">Firearm Present or Brandished</option>
+        <option value="releaseViolation">Violation of Bond/Parole/Probation/Release</option>
+      </select>
+
+      <button onclick="classifyFromOfficerMode()" class="w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white p-4 rounded-xl shadow hover:from-blue-700 hover:to-blue-900 text-lg font-bold transition-all duration-200">⚖️ Classify DV Charge</button>
+    </div>
+
+    <div id="resultBox" class="mt-10 p-8 bg-white text-black border-l-8 border-blue-500 rounded-xl shadow-lg hidden">
+      <h2 class="text-2xl font-bold">Charge Result:</h2>
+      <p id="result" class="mt-3 text-lg"></p>
+      <div id="explanation" class="mt-2 text-sm text-gray-700"></div>
+    </div>
+
+    <button onclick="clearForm()" class="mt-4 w-full bg-red-600 text-white p-3 rounded shadow hover:bg-red-700 text-lg font-semibold">🗑️ Clear Form</button>
+  </div>
+
+<script>
+// JavaScript functions (classifyFromOfficerMode, clearForm, voice input) included earlier
+</script>
+
+</body>
+</html>
