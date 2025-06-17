@@ -1,160 +1,148 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Domestic Violence Charge Evaluator</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SC DV Charge Evaluator</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body class="bg-gradient-to-b from-gray-900 to-gray-800 text-white min-h-screen p-6">
-  <div class="max-w-6xl mx-auto px-6 sm:px-8 md:px-12 lg:px-16 xl:px-24">
-    <h1 class="text-4xl font-extrabold mb-8 text-center text-blue-400 tracking-tight">Domestic Violence Charge Evaluator</h1>
-
-    <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl space-y-8 border border-blue-700">
-      <label for="household" class="block text-lg font-semibold">Victim's Relationship (Household Member Type):</label>
-      <select id="household" class="w-full p-3 border rounded shadow bg-gray-900 text-white">
-        <option value="none">-- Select --</option>
-        <option value="spouse">Spouse or Former Spouse</option>
-        <option value="cohabitant">Persons Who Are Cohabiting or Formerly Cohabited</option>
-        <option value="childInCommon">Persons Who Have a Child in Common</option>
-      </select>
-
-      <label for="incidentInput" class="block text-lg font-semibold">Describe the Incident:</label>
-      <textarea id="incidentInput" rows="4" class="w-full p-3 border rounded shadow bg-gray-900 text-white" placeholder="E.g., The husband pushed his pregnant wife and threatened her with a knife in front of their child..."></textarea>
-
-      <div class="flex items-center space-x-4">
-        <button id="voiceBtn" class="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700">🎤 Speak Now</button>
-        <p id="voiceOutput" class="text-sm text-gray-300"></p>
-      </div>
-
-      <label for="aggravators" class="block text-lg font-semibold">Aggravating Factors (select all that apply):</label>
-      <select id="aggravators" multiple class="w-full p-3 border rounded shadow bg-gray-900 text-white">
-        <option value="weapon">Deadly Weapon Used</option>
-        <option value="minor">Minor Present or Witness</option>
-        <option value="protection">Protection Order in Place</option>
-        <option value="pregnant">Victim Pregnant</option>
-        <option value="priorDV1">1 Prior DV Conviction</option>
-        <option value="priorDV2">2 or More Prior DV Convictions</option>
-        <option value="priorDVHAN">Prior DVHAN Conviction</option>
-        <option value="indifference">Extreme Indifference to Human Life</option>
-        <option value="strangulation">Attempted Strangulation or Obstructed Breathing</option>
-        <option value="seriousInjury">Serious Bodily Injury</option>
-        <option value="protractedLoss">Protracted Loss or Impairment of Body Part</option>
-        <option value="kidnapping">Kidnapping/Unlawful Restraint</option>
-        <option value="interference911">Interfered with 911/Reporting</option>
-        <option value="firearmPresent">Firearm Present or Brandished</option>
-        <option value="releaseViolation">Violation of Bond/Parole/Probation/Release</option>
-      </select>
-
-      <button onclick="classifyFromOfficerMode()" class="w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white p-4 rounded-xl shadow hover:from-blue-700 hover:to-blue-900 text-lg font-bold transition-all duration-200">⚖️ Classify DV Charge</button>
+<body class="bg-gray-100 text-gray-900 min-h-screen p-4">
+  <div class="max-w-3xl mx-auto">
+    <h1 class="text-3xl font-bold text-center text-blue-700 mb-6">SC DV Charge Evaluator</h1>
+    <textarea id="incidentInput" class="w-full p-4 rounded shadow border border-gray-300 text-sm" rows="6" placeholder="Describe the domestic incident..."></textarea>
+    <div class="flex justify-between mt-4">
+      <button onclick="classifyDV()" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">⚖️ Classify</button>
+      <button onclick="clearForm()" class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400">🧹 Clear</button>
+      <button id="voiceBtn" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">🎤 Speak</button>
     </div>
-
-    <div id="resultBox" class="mt-10 p-8 bg-white text-black border-l-8 border-blue-500 rounded-xl shadow-lg hidden">
-      <h2 class="text-2xl font-bold">Charge Result:</h2>
-      <p id="result" class="mt-3 text-lg"></p>
-      <div id="explanation" class="mt-2 text-sm text-gray-700"></div>
+    <div id="resultBox" class="hidden mt-6 p-4 bg-white border border-gray-300 rounded shadow">
+      <h2 class="text-xl font-bold mb-2">🔍 Result</h2>
+      <p id="result" class="text-lg font-semibold text-blue-800"></p>
+      <div id="reasoning" class="mt-2 text-sm text-gray-700"></div>
+      <div id="statuteText" class="mt-4 text-xs text-gray-600 whitespace-pre-line"></div>
     </div>
-
-    <button onclick="clearForm()" class="mt-4 w-full bg-red-600 text-white p-3 rounded shadow hover:bg-red-700 text-lg font-semibold">🗑️ Clear Form</button>
   </div>
-
 <script>
-function classifyFromOfficerMode() {
-  const incident = document.getElementById("incidentInput").value.toLowerCase();
-  const household = document.getElementById("household").value;
-  const factors = Array.from(document.getElementById("aggravators").selectedOptions).map(o => o.value);
-  const resultBox = document.getElementById("resultBox");
-  const result = document.getElementById("result");
-  const explanation = document.getElementById("explanation");
-
-  if (!incident || household === "none") {
-    result.innerText = "Please complete all fields above.";
-    explanation.innerText = "";
-    resultBox.classList.remove("hidden");
-    return;
+const statutes = {
+  DV3rd: {
+    title: "Domestic Violence 3rd Degree",
+    citation: "§16-25-20",
+    text: `A person commits the offense of domestic violence in the third degree if the person: (1) causes physical harm or injury to a person's own household member; or (2) offers or attempts to cause physical harm or injury to a person's own household member with apparent present ability under circumstances reasonably creating fear of imminent peril.`
+  },
+  DV2nd: {
+    title: "Domestic Violence 2nd Degree",
+    citation: "§16-25-40",
+    text: `DV 2nd includes violations of §16-25-20 with aggravating factors such as: moderate bodily injury; prior DV convictions; violation of a protection order; interference with emergency communication; or committed in front of a minor.`
+  },
+  DV1st: {
+    title: "Domestic Violence 1st Degree",
+    citation: "§16-25-65(A)",
+    text: `DV 1st includes all elements of DV 2nd, plus: great bodily injury; use of firearm; or if committed in presence of a child and under prior DV conviction.`
+  },
+  DVHAN: {
+    title: "DV High and Aggravated Nature (DVHAN)",
+    citation: "§16-25-65(B)",
+    text: `DVHAN occurs when the conduct manifests extreme indifference to the value of human life, and may involve: use of a deadly weapon; great bodily injury; or a pattern of DV despite protective orders.`
   }
+};
 
-  const contactWords = ["hit", "pushed", "slapped", "punched", "shoved", "kicked", "threw", "struck", "bit", "tossed", "choked", "stomped"];
-  const threatWords = ["threat", "threaten", "said would kill", "said would hurt", "pull gun", "wave knife", "raise bat", "screamed", "yelled threat"];
-  const interferenceWords = ["prevent 911", "block 911", "stop call", "snatched phone", "broke phone", "disabled phone"];
+const injuries = {
+  physical: ["slap", "push", "grab", "shove", "hit"],
+  moderate: ["broken finger", "black eye", "swollen", "bruised ribs", "concussion", "sprained", "minor fracture"],
+  great: ["gunshot", "stab", "burned", "fractured skull", "unconscious", "choked", "bleeding", "severe injury"]
+};
 
-  let contact = contactWords.some(word => incident.includes(word));
-  let threat = threatWords.some(word => incident.includes(word));
-  let interference = interferenceWords.some(word => incident.includes(word));
+const threats = {
+  low: ["hurt you", "beat you"],
+  high: ["kill you", "shoot you", "stab you"]
+};
 
-  let charge = "Domestic Violence 3rd Degree";
+const aggravators = [
+  { phrase: "protection order", match: "violation of a protection order" },
+  { phrase: "called 911", match: "interference with emergency communication" },
+  { phrase: "in front of child", match: "committed in front of a minor" },
+  { phrase: "previous conviction", match: "prior DV conviction" }
+];
+
+function classifyDV() {
+  const input = document.getElementById("incidentInput").value.toLowerCase();
+  let result = statutes.DV3rd.title;
+  let cite = statutes.DV3rd.citation;
+  let text = statutes.DV3rd.text;
   let reasons = [];
+  let score = 0;
 
-  if (factors.includes("strangulation") || factors.includes("seriousInjury") || factors.includes("indifference")) {
-    charge = "Domestic Violence of a High and Aggravated Nature (DVHAN)";
-    reasons.push("Charge elevated to DVHAN under §16-25-65:");
-    if (factors.includes("strangulation")) reasons.push("- Attempted strangulation or restricted breathing.");
-    if (factors.includes("seriousInjury")) reasons.push("- Caused serious bodily injury.");
-    if (factors.includes("indifference")) reasons.push("- Circumstances show extreme indifference to human life.");
-  } else if (
-    factors.includes("priorDV2") ||
-    factors.includes("priorDVHAN") ||
-    (factors.includes("weapon") && factors.includes("protection")) ||
-    (factors.includes("firearmPresent") && factors.includes("minor")) ||
-    (factors.includes("protection") && contact)
-  ) {
-    charge = "Domestic Violence 1st Degree";
-    reasons.push("Charge elevated to DV 1st under §16-25-20(B):");
-    if (factors.includes("priorDV2")) reasons.push("- Offender has two or more prior DV convictions.");
-    if (factors.includes("priorDVHAN")) reasons.push("- Offender has a prior DVHAN conviction.");
-    if (factors.includes("weapon") && factors.includes("protection")) reasons.push("- Weapon used and a protection order was in place.");
-    if (factors.includes("firearmPresent") && factors.includes("minor")) reasons.push("- Firearm brandished in presence of a minor.");
-    if (factors.includes("protection") && contact) reasons.push("- Physical contact occurred despite active protection order.");
-  } else if (factors.length > 0 || threat || interference) {
-    charge = "Domestic Violence 2nd Degree";
-    reasons.push("Charge elevated to DV 2nd under §16-25-20(A):");
-    if (threat) reasons.push("- Credible threat of harm with apparent ability.");
-    if (interference) reasons.push("- Prevented or interfered with calling 911 or reporting the incident.");
-    factors.forEach(f => reasons.push("- Aggravating factor present: " + f));
-  } else {
-    reasons.push("- Meets §16-25-20 elements: physical harm to household member without aggravators.");
+  const match = (words) => words.some(word => input.includes(word));
+
+  if (match(injuries.physical)) {
+    reasons.push("Detected physical harm consistent with DV 3rd.");
+    score = 1;
+  }
+  if (match(injuries.moderate)) {
+    reasons.push("Detected moderate bodily injury consistent with DV 2nd.");
+    result = statutes.DV2nd.title;
+    cite = statutes.DV2nd.citation;
+    text = statutes.DV2nd.text;
+    score = 2;
+  }
+  if (match(injuries.great)) {
+    reasons.push("Detected great bodily injury consistent with DVHAN.");
+    result = statutes.DVHAN.title;
+    cite = statutes.DVHAN.citation;
+    text = statutes.DVHAN.text;
+    score = 4;
+  }
+  if (match(threats.high)) {
+    reasons.push("Detected high-level threat consistent with DV 1st.");
+    if (score < 3) {
+      result = statutes.DV1st.title;
+      cite = statutes.DV1st.citation;
+      text = statutes.DV1st.text;
+      score = 3;
+    }
   }
 
-  result.innerText = charge;
-  explanation.innerHTML = "<strong>Reasoning:</strong><br>" + reasons.join("<br>");
-  resultBox.classList.remove("hidden");
+  aggravators.forEach(factor => {
+    if (input.includes(factor.phrase)) {
+      reasons.push("Detected aggravating factor: " + factor.match);
+      if (score === 1) {
+        result = statutes.DV2nd.title;
+        cite = statutes.DV2nd.citation;
+        text = statutes.DV2nd.text;
+        score = 2;
+      } else if (score === 2 && factor.phrase.includes("previous")) {
+        result = statutes.DV1st.title;
+        cite = statutes.DV1st.citation;
+        text = statutes.DV1st.text;
+        score = 3;
+      }
+    }
+  });
+
+  document.getElementById("result").innerText = result + " (" + cite + ")";
+  document.getElementById("reasoning").innerHTML = "<strong>Why this charge:</strong><br>" + reasons.join("<br>");
+  document.getElementById("statuteText").innerHTML = "<strong>Statute Reference:</strong><br>" + text;
+  document.getElementById("resultBox").classList.remove("hidden");
 }
 
 function clearForm() {
   document.getElementById("incidentInput").value = "";
-  document.getElementById("household").value = "none";
-  document.getElementById("aggravators").selectedIndex = -1;
   document.getElementById("resultBox").classList.add("hidden");
 }
 
 const voiceBtn = document.getElementById("voiceBtn");
-const voiceOutput = document.getElementById("voiceOutput");
-const recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-if (recognition) {
-  const recog = new recognition();
-  recog.continuous = false;
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+if (SpeechRecognition) {
+  const recog = new SpeechRecognition();
   recog.lang = "en-US";
   recog.interimResults = false;
   recog.maxAlternatives = 1;
-
-  voiceBtn.onclick = () => {
-    recog.start();
-    voiceOutput.innerText = "Listening...";
-  };
-
+  voiceBtn.onclick = () => recog.start();
   recog.onresult = (event) => {
-    const transcript = event.results[0][0].transcript;
-    document.getElementById("incidentInput").value = transcript;
-    voiceOutput.innerText = "Heard: " + transcript;
+    document.getElementById("incidentInput").value = event.results[0][0].transcript;
   };
-
-  recog.onerror = (event) => {
-    voiceOutput.innerText = "Error: " + event.error;
-  };
-} else {
-  voiceOutput.innerText = "Voice input not supported in this browser.";
 }
 </script>
-
 </body>
 </html>
